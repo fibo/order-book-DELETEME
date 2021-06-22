@@ -1,0 +1,107 @@
+{
+  "name": "order-book",
+  "version": "0.1.0",
+  "private": true,
+  "author": {
+    "name": "Gianluca Casati",
+    "url": "http://g14n.info"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.11.4",
+    "@testing-library/react": "^11.1.0",
+    "@testing-library/user-event": "^12.1.10",
+    "@types/jest": "^26.0.15",
+    "@types/node": "^15.12.4",
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "lint-staged": "^10.5.4",
+    "npm-run-all": "^4.1.5",
+    "pre-commit": "^1.2.2",
+    "prettier": "^2.2.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-scripts": "4.0.3",
+    "sass": "^1.35.1",
+    "typescript": "^4.1.2"
+  },
+  "scripts": {
+    "build": "react-scripts build",
+    "lint-staged": "lint-staged",
+    "react-scripts_test": "react-scripts test --watchAll=false",
+    "react-scripts_test--watch": "react-scripts test",
+    "start": "react-scripts start",
+    "test": "run-s tsc react-scripts_test",
+    "tsc": "tsc --project ."
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "rules": {
+      "arrow-parens": [
+        "error",
+        "always"
+      ],
+      "import/extensions": [
+        "error",
+        "never"
+      ],
+      "import/order": [
+        "error",
+        {
+          "newlines-between": "always"
+        }
+      ],
+      "no-multiple-empty-lines": [
+        "error",
+        {
+          "max": 1,
+          "maxEOF": 1
+        }
+      ],
+      "react/jsx-key": "error",
+      "react/jsx-max-props-per-line": [
+        "error",
+        {
+          "maximum": 3,
+          "when": "multiline"
+        }
+      ]
+    }
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "lint-staged": {
+    "**/*.{js,ts,tsx}": [
+      "prettier --write"
+    ],
+    "**/*.{css,scss}": [
+      "prettier --write"
+    ],
+    "*.{json,html,md}": "prettier --write"
+  },
+  "pre-commit": [
+    "lint-staged"
+  ],
+  "prettier": {
+    "arrowParens": "always",
+    "jsxBracketSameLine": false,
+    "jsxSingleQuote": true,
+    "printWidth": 120,
+    "singleQuote": true,
+    "trailingComma": "all"
+  }
+}
