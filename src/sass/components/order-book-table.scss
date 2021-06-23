@@ -1,5 +1,56 @@
 .order-book-table {
-  th {
+  color: $color-text-white;
+  font-size: 0.8em;
+  display: flex;
+  flex-direction: column;
+
+  span {
+    min-width: 5em;
+    text-align: right;
+    padding-bottom: $gap-1;
+  }
+
+  &__header {
+    color: $color-text-grey;
     text-transform: uppercase;
+    display: flex;
+
+    &--buy {
+      padding-left: $gap-5;
+      padding-right: $gap-5;
+      flex-direction: row;
+    }
+
+    &--sell {
+      padding-left: $gap-4;
+      padding-right: $gap-5;
+      flex-direction: row-reverse;
+    }
+  }
+
+  &__row {
+    display: flex;
+
+    &--buy {
+      padding-left: $gap-5;
+      padding-right: $gap-4;
+      flex-direction: row;
+    }
+
+    &--sell {
+      padding-left: $gap-4;
+      padding-right: $gap-5;
+      flex-direction: row-reverse;
+    }
+  }
+
+  &__cell {
+    &--buy {
+      color: $color-buy;
+    }
+
+    &--sell {
+      color: $color-sell;
+    }
   }
 }

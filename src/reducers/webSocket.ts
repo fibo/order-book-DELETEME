@@ -1,4 +1,10 @@
-import { FeedData, FeedMessageSnapshot, FeedMessageSubscribed, FeedMessageUpdate } from '../types/feed';
+import {
+  FeedData,
+  FeedAggregatedData,
+  FeedMessageSnapshot,
+  FeedMessageSubscribed,
+  FeedMessageUpdate,
+} from '../types/feed';
 import { Reducer, ReducerAction } from '../types/reducers';
 
 type ActionType =
@@ -28,15 +34,20 @@ export type WebSocketMessageReceived = Partial<FeedMessageSnapshot> &
  */
 
 export type WebSocketState = {
+  aggregatedOrderBook: FeedAggregatedData;
   feed?: string;
   orderBook: FeedData;
   readyState: ReadyState | null;
 };
 
 export const webSocketInitialState = (): WebSocketState => ({
+  aggregatedOrderBook: {
+    asks: [[10, 10, 10]],
+    bids: [[10, 10, 10]],
+  },
   orderBook: {
-    asks: [],
-    bids: [],
+    asks: [[10, 10]],
+    bids: [[20, 20]],
   },
   readyState: null,
 });
@@ -48,6 +59,8 @@ export const webSocketInitialState = (): WebSocketState => ({
 export const selectWebSocketIsOpen = (state: WebSocketState) => state.readyState === WebSocket.OPEN;
 
 export const selectWebSocketReadyState = (state: WebSocketState) => state.readyState;
+
+export const selectOrderBookAggregatedData = (state: WebSocketState) => state.aggregatedOrderBook;
 
 export const selectOrderBookData = (state: WebSocketState) => state.orderBook;
 

@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { OrderBookTable } from './OrderBookTable';
 
 test('OrderBook', () => {
-  render(<OrderBookTable rows={[]} />);
+  render(<OrderBookTable side='sell' rows={[]} />);
 
   const priceLabel = screen.getByText(/price/i);
   expect(priceLabel).toBeInTheDocument();
