@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-import { OrderBook } from '../components/OrderBook';
+import { OrderBook } from './OrderBook';
 
 test('OrderBook', () => {
   render(<OrderBook />);
