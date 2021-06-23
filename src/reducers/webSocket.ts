@@ -1,16 +1,20 @@
-import { ReducerAction } from '../types/reducers';
+import { Reducer, ReducerAction } from '../types/reducers';
 
 type ActionType = 'INITIALIZE_WEBSOCKET' | 'SEND_MESSAGE';
 
-type ConnectionStatus = 'CONNECTING' | 'OPEN' | 'CLOSING' | 'CLOSED' | 'UNITIALIZED';
+type ConnectionStatus = 'CONNECTING' | 'OPEN' | 'CLOSING' | 'CLOSED' | 'UNINITIALIZED';
 
-type WebSocketState = {
+export type WebSocketAction = ReducerAction<ActionType>;
+
+export type WebSocketState = {
   connectionStatus: ConnectionStatus;
 };
 
-export const webSocketInitialState = (): WebSocketState => ({ connectionStatus: 'UNITIALIZED' });
+export type WebSocketReducer = Reducer<WebSocketState, WebSocketAction>;
 
-export function webSocketReducer(state: WebSocketState, action: ReducerAction<ActionType>) {
+export const webSocketInitialState = (): WebSocketState => ({ connectionStatus: 'UNINITIALIZED' });
+
+export function webSocketReducer(state: WebSocketState, action: ReducerAction<ActionType>): WebSocketState {
   switch (action.type) {
     case 'INITIALIZE_WEBSOCKET': {
       return state;
