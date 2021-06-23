@@ -1,0 +1,19 @@
+.order-book {
+  display: flex;
+  flex-direction: column;
+
+  &__header {
+    display: flex;
+    flex-direction: row;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: row;
+  }
+
+  &__footer {
+    display: flex;
+    flex-direction: row;
+  }
+}

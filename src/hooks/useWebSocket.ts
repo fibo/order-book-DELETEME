@@ -9,9 +9,11 @@ import {
   webSocketReducer,
   webSocketInitialState,
 } from '../reducers/webSocket';
+import { FeedMessageSubscribe } from '../types/feed';
 
 export type WebSocketDispatch = Dispatch<WebSocketAction>;
-export type WebSocketSendMessage = (data: string) => void;
+export type WebSocketMessageSent = FeedMessageSubscribe;
+export type WebSocketSendMessage = (message: WebSocketMessageSent) => void;
 
 function initializeWebSocket(webSocketUrl: string, dispatch: WebSocketDispatch) {
   try {
@@ -46,12 +48,12 @@ export function useWebSocket(webSocketUrl: string): [WebSocketState, WebSocketSe
   const webSocketIsOpen = selectWebSocketIsOpen(state);
 
   const sendMessage = useCallback(
-    (data: string) => {
+    (message: FeedMessageSubscribe) => {
       if (webSocketIsOpen) {
         const webSocket = webSocketRef.current;
 
         if (webSocket) {
-          webSocket.send(data);
+          webSocket.send(JSON.stringify(message));
         }
       }
     },

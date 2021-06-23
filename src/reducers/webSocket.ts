@@ -1,4 +1,4 @@
-import { FeedMessageSnapshot, FeedMessageSubscribed, FeedMessageUpdate } from '../types/feed';
+import { FeedData, FeedMessageSnapshot, FeedMessageSubscribed, FeedMessageUpdate } from '../types/feed';
 import { Reducer, ReducerAction } from '../types/reducers';
 
 type ActionType =
@@ -29,10 +29,17 @@ export type WebSocketMessageReceived = Partial<FeedMessageSnapshot> &
 
 export type WebSocketState = {
   feed?: string;
+  orderBook: FeedData;
   readyState: ReadyState | null;
 };
 
-export const webSocketInitialState = (): WebSocketState => ({ readyState: null });
+export const webSocketInitialState = (): WebSocketState => ({
+  orderBook: {
+    asks: [],
+    bids: [],
+  },
+  readyState: null,
+});
 
 /*
  * Selectors
@@ -41,6 +48,8 @@ export const webSocketInitialState = (): WebSocketState => ({ readyState: null }
 export const selectWebSocketIsOpen = (state: WebSocketState) => state.readyState === WebSocket.OPEN;
 
 export const selectWebSocketReadyState = (state: WebSocketState) => state.readyState;
+
+export const selectOrderBookData = (state: WebSocketState) => state.orderBook;
 
 /*
  * Reducer
@@ -86,10 +95,13 @@ export function webSocketReducer(state: WebSocketState, action: ReducerAction<Ac
 
         const hasSubscribedEvent = data.event === 'subscribed';
         const hasFeedName = typeof data.feed === 'string' && data.feed.length > 0;
+        const hasAsks = Array.isArray(data.asks);
+        const hasBids = Array.isArray(data.bids);
+        const hasOrderBook = hasAsks && hasBids;
         const isSnapshot = hasFeedName && (data.feed as string).endsWith('_snapshot');
-        const isUpdate = hasFeedName && !isSnapshot;
 
         switch (true) {
+          // Subsribed event.
           case hasSubscribedEvent && hasFeedName: {
             const { feed } = data as FeedMessageSubscribed;
 
@@ -99,11 +111,21 @@ export function webSocketReducer(state: WebSocketState, action: ReducerAction<Ac
             };
           }
 
-          case isSnapshot: {
-            return state;
+          // Initial snapshot.
+          case isSnapshot && hasOrderBook: {
+            const { asks, bids } = data as FeedMessageSubscribed;
+
+            return {
+              ...state,
+              orderBook: {
+                asks,
+                bids,
+              },
+            };
           }
 
-          case isUpdate: {
+          // Diff data message.
+          case hasOrderBook && !isSnapshot: {
             return state;
           }
 

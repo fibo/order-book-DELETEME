@@ -1,10 +1,10 @@
 export type ProductId = 'PI_XBTUSD' | 'PI_ETHUSD';
 
-export type FeedDataPoint = [quantity: number, volume: number];
+export type FeedDataPoint = [price: number, amount: number];
 
 export type FeedData = {
-  bids: FeedDataPoint[];
   asks: FeedDataPoint[];
+  bids: FeedDataPoint[];
 };
 
 export type FeedMessageSnapshot = FeedData & {
@@ -12,7 +12,13 @@ export type FeedMessageSnapshot = FeedData & {
   numLevels: number;
 };
 
-export type FeedMessageSubscribed = {
+export type FeedMessageSubscribe = {
+  event: 'subscribe';
+  feed: string;
+  product_ids: ProductId[];
+};
+
+export type FeedMessageSubscribed = FeedData & {
   event: 'subscribed';
   feed: string;
   product_ids: ProductId[];
