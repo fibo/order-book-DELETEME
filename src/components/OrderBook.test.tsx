@@ -1,9 +1,10 @@
 import { render, screen } from '@testing-library/react';
 
-import { OrderBook } from '../components/OrderBook';
+import { OrderBook } from './OrderBook';
 
 test('OrderBook', () => {
-  render(<OrderBook />);
+  render(<OrderBook data={{ asks: [], bids: [] }} />);
+
   const title = screen.getByText(/order book/i);
   expect(title).toBeInTheDocument();
 });
