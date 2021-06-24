@@ -42,12 +42,12 @@ export type WebSocketState = {
 
 export const webSocketInitialState = (): WebSocketState => ({
   aggregatedOrderBook: {
-    asks: [[10, 10, 10]],
-    bids: [[10, 10, 10]],
+    asks: [],
+    bids: [],
   },
   orderBook: {
-    asks: [[10, 10]],
-    bids: [[20, 20]],
+    asks: [],
+    bids: [],
   },
   readyState: null,
 });

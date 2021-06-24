@@ -8,7 +8,7 @@ import {
   selectWebSocketReadyState,
   webSocketReducer,
   webSocketInitialState,
-} from '../reducers/webSocket';
+} from '../reducers/dataFeed';
 import { FeedMessageSubscribe } from '../types/feed';
 
 export type WebSocketDispatch = Dispatch<WebSocketAction>;
