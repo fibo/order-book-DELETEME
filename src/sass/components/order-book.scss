@@ -2,7 +2,13 @@
   display: flex;
   flex-direction: column;
   background-color: $color-background-dark-2;
+  margin: $gap-1;
   padding: $gap-1;
+  min-width: $min-width;
+
+  @media screen and (max-width: $mobile) {
+    flex-grow: 1;
+  }
 
   &__header {
     background-color: $color-background-dark-1;
@@ -16,9 +22,14 @@
 
   &__content {
     background-color: $color-background-dark-1;
+    margin: $gap-1;
     min-height: 17em;
     display: flex;
     flex-direction: row;
+
+    @media screen and (max-width: $mobile) {
+      flex-direction: column;
+    }
   }
 
   &__footer {

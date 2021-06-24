@@ -1,6 +1,7 @@
 import {
   FeedData,
   FeedAggregatedData,
+  FeedMessageInfoVersion,
   FeedMessageSnapshot,
   FeedMessageSubscribed,
   FeedMessageUpdate,
@@ -24,23 +25,27 @@ type ReadyState = typeof CONNECTING | typeof CLOSED | typeof CLOSING | typeof OP
 
 export type WebSocketAction = ReducerAction<ActionType>;
 
-export type WebSocketReducer = Reducer<WebSocketState, WebSocketAction>;
+export type FeedReducer = Reducer<FeedState, WebSocketAction>;
 
-export type WebSocketMessageReceived = Partial<FeedMessageSnapshot> &
+export type WebSocketMessageReceived = Partial<FeedMessageInfoVersion> &
+  Partial<FeedMessageSnapshot> &
   Partial<FeedMessageSubscribed> &
   Partial<FeedMessageUpdate>;
+
 /*
  * State
  */
 
-export type WebSocketState = {
+export type FeedState = {
   aggregatedOrderBook: FeedAggregatedData;
   feed?: string;
+  connected: boolean;
   orderBook: FeedData;
   readyState: ReadyState | null;
 };
 
-export const webSocketInitialState = (): WebSocketState => ({
+export const feedInitialState = (): FeedState => ({
+  connected: false,
   aggregatedOrderBook: {
     asks: [],
     bids: [],
@@ -56,19 +61,21 @@ export const webSocketInitialState = (): WebSocketState => ({
  * Selectors
  */
 
-export const selectWebSocketIsOpen = (state: WebSocketState) => state.readyState === WebSocket.OPEN;
+export const selectWebSocketIsOpen = (state: FeedState) => state.readyState === WebSocket.OPEN;
 
-export const selectWebSocketReadyState = (state: WebSocketState) => state.readyState;
+export const selectWebSocketReadyState = (state: FeedState) => state.readyState;
 
-export const selectOrderBookAggregatedData = (state: WebSocketState) => state.aggregatedOrderBook;
+export const selectFeedIsConnected = (state: FeedState) => state.connected;
 
-export const selectOrderBookData = (state: WebSocketState) => state.orderBook;
+export const selectOrderBookAggregatedData = (state: FeedState) => state.aggregatedOrderBook;
+
+export const selectOrderBookData = (state: FeedState) => state.orderBook;
 
 /*
  * Reducer
  */
 
-export function webSocketReducer(state: WebSocketState, action: ReducerAction<ActionType>): WebSocketState {
+export function feedReducer(state: FeedState, action: ReducerAction<ActionType>): FeedState {
   switch (action.type) {
     case 'WEBSOCKET_CLOSED': {
       return {
@@ -106,6 +113,7 @@ export function webSocketReducer(state: WebSocketState, action: ReducerAction<Ac
       try {
         const data = typeof action.data === 'string' ? (JSON.parse(action.data) as WebSocketMessageReceived) : {};
 
+        const isInfoVersion = data.event === 'info';
         const hasSubscribedEvent = data.event === 'subscribed';
         const hasFeedName = typeof data.feed === 'string' && data.feed.length > 0;
         const hasAsks = Array.isArray(data.asks);
@@ -114,25 +122,35 @@ export function webSocketReducer(state: WebSocketState, action: ReducerAction<Ac
         const isSnapshot = hasFeedName && (data.feed as string).endsWith('_snapshot');
 
         switch (true) {
-          // Subsribed event.
-          case hasSubscribedEvent && hasFeedName: {
-            const { feed } = data as FeedMessageSubscribed;
-
+          // First message.
+          case isInfoVersion: {
             return {
               ...state,
-              feed,
+              connected: true,
+            };
+          }
+
+          // Subsribed event.
+          case hasSubscribedEvent && hasFeedName: {
+            return {
+              ...state,
+              feed: data.feed,
             };
           }
 
           // Initial snapshot.
           case isSnapshot && hasOrderBook: {
-            const { asks, bids } = data as FeedMessageSubscribed;
+            const { asks, bids } = data as FeedData;
 
             return {
               ...state,
               orderBook: {
                 asks,
                 bids,
+              },
+              aggregatedOrderBook: {
+                asks: asks.map((dataPoint) => [...dataPoint, 0]),
+                bids: bids.map((dataPoint) => [...dataPoint, 0]),
               },
             };
           }

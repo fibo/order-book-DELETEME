@@ -19,6 +19,11 @@ export type FeedMessageSnapshot = FeedData & {
   numLevels: number;
 };
 
+export type FeedMessageInfoVersion = {
+  event: 'info';
+  version: number;
+};
+
 export type FeedMessageSubscribe = {
   event: 'subscribe';
   feed: string;

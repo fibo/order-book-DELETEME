@@ -1,13 +1,13 @@
 import { Dispatch, useCallback, useEffect, useReducer, useRef } from 'react';
 
 import {
+  FeedReducer,
+  FeedState,
   WebSocketAction,
-  WebSocketReducer,
-  WebSocketState,
+  feedInitialState,
+  feedReducer,
   selectWebSocketIsOpen,
   selectWebSocketReadyState,
-  webSocketReducer,
-  webSocketInitialState,
 } from '../reducers/dataFeed';
 import { FeedMessageSubscribe } from '../types/feed';
 
@@ -40,8 +40,8 @@ function initializeWebSocket(webSocketUrl: string, dispatch: WebSocketDispatch) 
   }
 }
 
-export function useWebSocket(webSocketUrl: string): [WebSocketState, WebSocketSendMessage] {
-  const [state, dispatch] = useReducer<WebSocketReducer>(webSocketReducer, webSocketInitialState());
+export function useWebSocket(webSocketUrl: string): [FeedState, WebSocketSendMessage] {
+  const [state, dispatch] = useReducer<FeedReducer>(feedReducer, feedInitialState());
   const webSocketRef = useRef<WebSocket>();
 
   const readyState = selectWebSocketReadyState(state);
