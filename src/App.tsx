@@ -3,14 +3,14 @@ import { useCallback, useEffect } from 'react';
 import { OrderBook } from './components/OrderBook';
 import { WEBSOCKET_URL } from './environment';
 import { useWebSocket } from './hooks/useWebSocket';
-import { selectFeedIsConnected, selectWebSocketIsOpen, selectOrderBookAggregatedData } from './reducers/dataFeed';
+import { selectDataFeedIsConnected, selectWebSocketIsOpen, selectOrderBookAggregatedData } from './reducers/dataFeed';
 
 export function App() {
   const [state, sendMessage] = useWebSocket(WEBSOCKET_URL);
 
   const webSocketIsOpen = selectWebSocketIsOpen(state);
   const orderBookData = selectOrderBookAggregatedData(state);
-  const feedIsConnected = selectFeedIsConnected(state);
+  const feedIsConnected = selectDataFeedIsConnected(state);
 
   const toggleFeed = useCallback(() => {
     if (webSocketIsOpen) {

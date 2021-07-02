@@ -23,9 +23,10 @@ const OPEN = WebSocket.OPEN;
 
 type ReadyState = typeof CONNECTING | typeof CLOSED | typeof CLOSING | typeof OPEN;
 
-export type WebSocketAction = ReducerAction<ActionType>;
+export type DataFeedAction = ReducerAction<ActionType>;
+type Action = DataFeedAction;
 
-export type FeedReducer = Reducer<FeedState, WebSocketAction>;
+export type DataFeedReducer = Reducer<State, Action>;
 
 export type WebSocketMessageReceived = Partial<FeedMessageInfoVersion> &
   Partial<FeedMessageSnapshot> &
@@ -36,15 +37,16 @@ export type WebSocketMessageReceived = Partial<FeedMessageInfoVersion> &
  * State
  */
 
-export type FeedState = {
+export type DataFeedState = {
   aggregatedOrderBook: FeedAggregatedData;
   feed?: string;
   connected: boolean;
   orderBook: FeedData;
   readyState: ReadyState | null;
 };
+type State = DataFeedState;
 
-export const feedInitialState = (): FeedState => ({
+export const dataFeedInitialState = (): State => ({
   connected: false,
   aggregatedOrderBook: {
     asks: [],
@@ -61,21 +63,21 @@ export const feedInitialState = (): FeedState => ({
  * Selectors
  */
 
-export const selectWebSocketIsOpen = (state: FeedState) => state.readyState === WebSocket.OPEN;
+export const selectWebSocketIsOpen = (state: State) => state.readyState === WebSocket.OPEN;
 
-export const selectWebSocketReadyState = (state: FeedState) => state.readyState;
+export const selectWebSocketReadyState = (state: State) => state.readyState;
 
-export const selectFeedIsConnected = (state: FeedState) => state.connected;
+export const selectDataFeedIsConnected = (state: State) => state.connected;
 
-export const selectOrderBookAggregatedData = (state: FeedState) => state.aggregatedOrderBook;
+export const selectOrderBookAggregatedData = (state: State) => state.aggregatedOrderBook;
 
-export const selectOrderBookData = (state: FeedState) => state.orderBook;
+export const selectOrderBookData = (state: State) => state.orderBook;
 
 /*
  * Reducer
  */
 
-export function feedReducer(state: FeedState, action: ReducerAction<ActionType>): FeedState {
+export function dataFeedReducer(state: State, action: Action): State {
   switch (action.type) {
     case 'WEBSOCKET_CLOSED': {
       return {
