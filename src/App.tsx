@@ -3,11 +3,17 @@ import { useCallback, useEffect } from 'react';
 import { OrderBook } from './components/OrderBook';
 import { WEBSOCKET_URL } from './environment';
 import { useWebSocket } from './hooks/useWebSocket';
-import { selectDataFeedIsConnected, selectWebSocketIsOpen, selectOrderBookAggregatedData } from './reducers/dataFeed';
+import {
+  selectDataFeedIsConnected,
+  selectDataFeedGroupSize,
+  selectWebSocketIsOpen,
+  selectOrderBookAggregatedData,
+} from './reducers/dataFeed';
 
 export function App() {
   const [state, sendMessage] = useWebSocket(WEBSOCKET_URL);
 
+  const groupSize = selectDataFeedGroupSize(state);
   const webSocketIsOpen = selectWebSocketIsOpen(state);
   const orderBookData = selectOrderBookAggregatedData(state);
   const feedIsConnected = selectDataFeedIsConnected(state);
@@ -28,6 +34,7 @@ export function App() {
     <div className='container'>
       <OrderBook
         data={orderBookData}
+        groupSize={groupSize}
         onClickToggleFeed={toggleFeed}
         onClickKillFeed={toggleFeed}
         webSocketIsOpen={webSocketIsOpen}

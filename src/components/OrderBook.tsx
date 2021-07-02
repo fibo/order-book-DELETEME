@@ -1,16 +1,17 @@
-import { OrderBookSelect } from '../components/OrderBookSelect';
+import { OrderBookSelect, OrderBookSelectProps } from '../components/OrderBookSelect';
 import { OrderBookTable } from '../components/OrderBookTable';
 import { FeedAggregatedData } from '../types/feed';
 
-interface OrderBookProps {
+export type OrderBookProps = Pick<OrderBookSelectProps, 'groupSize'> & {
   data: FeedAggregatedData;
   onClickToggleFeed?: () => void;
   onClickKillFeed?: () => void;
   webSocketIsOpen?: boolean;
-}
+};
 
 export function OrderBook({
   data: { asks, bids },
+  groupSize,
   onClickToggleFeed,
   onClickKillFeed,
   webSocketIsOpen,
@@ -20,17 +21,13 @@ export function OrderBook({
       <div className='order-book__header'>
         <div>Order Book</div>
 
-        <OrderBookSelect />
+        <OrderBookSelect groupSize={groupSize} />
       </div>
 
       <div className='order-book__content'>
-        <div>
-          <OrderBookTable rows={asks} side='sell' />
-        </div>
+        <OrderBookTable rows={asks} side='sell' />
 
-        <div>
-          <OrderBookTable rows={bids} side='buy' />
-        </div>
+        <OrderBookTable rows={bids} side='buy' />
       </div>
 
       <div className='order-book__footer'>

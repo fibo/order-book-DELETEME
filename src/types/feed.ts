@@ -7,11 +7,12 @@ export type FeedData = {
   bids: FeedDataPoint[];
 };
 
-export type FeedAggregatedDataPoint = [price: number, size: number, total: number];
+export type FeedAggregatedDataRecord = Record</* price: */ number, { size: number; total: number; percentage: number }>;
+export type FeedAggregatedDataRow = [price: number, size: number, total: number, percentage: number];
 
 export type FeedAggregatedData = {
-  asks: FeedAggregatedDataPoint[];
-  bids: FeedAggregatedDataPoint[];
+  asks: FeedAggregatedDataRow[];
+  bids: FeedAggregatedDataRow[];
 };
 
 export type FeedMessageSnapshot = FeedData & {

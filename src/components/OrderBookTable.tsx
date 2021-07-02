@@ -1,10 +1,10 @@
 import classnames from 'classnames';
 
-import { FeedAggregatedDataPoint } from '../types/feed';
+import { FeedAggregatedDataRow } from '../types/feed';
 import { MarketSide } from '../types/market';
 
 export type OrderBookTableProps = {
-  rows: FeedAggregatedDataPoint[];
+  rows: FeedAggregatedDataRow[];
   side: MarketSide;
 };
 
@@ -26,7 +26,7 @@ export function OrderBookTable({ rows, side }: OrderBookTableProps) {
       </div>
 
       <div>
-        {rows.map(([price, size, total], i) => (
+        {rows.map(([price, size, total, percentage], i) => (
           <div
             className={classnames('order-book-table__row', {
               'order-book-table__row--buy': sideIsBuy,
@@ -34,6 +34,14 @@ export function OrderBookTable({ rows, side }: OrderBookTableProps) {
             })}
             key={i}
           >
+            <div
+              className={classnames('order-book-table__meter', {
+                'order-book-table__meter--buy': sideIsBuy,
+                'order-book-table__meter--sell': sideIsSell,
+              })}
+              style={{ width: `${percentage}%` }}
+            />
+
             <span
               className={classnames('order-book-table__cell', {
                 'order-book-table__cell--buy': sideIsBuy,

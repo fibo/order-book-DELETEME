@@ -1,6 +1,9 @@
 .order-book-table {
+  $meter-transparency: 0.4;
+
   color: $color-text-white;
   font-size: 0.8em;
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
 
@@ -12,6 +15,7 @@
     text-align: right;
     padding-bottom: $gap-2;
     padding-top: $gap-2;
+    width: 33%;
   }
 
   &__header {
@@ -21,18 +25,51 @@
 
     &--buy {
       padding-left: $gap-5;
-      padding-right: $gap-5;
+      padding-right: $gap-4;
       flex-direction: row;
+
+      @media screen and (max-width: $mobile) {
+        color: transparent;
+        user-select: none;
+        padding-right: $gap-4;
+      }
     }
 
     &--sell {
       padding-left: $gap-4;
       padding-right: $gap-5;
       flex-direction: row-reverse;
+
+      @media screen and (max-width: $mobile) {
+        flex-direction: row;
+        padding-right: $gap-4;
+      }
+    }
+  }
+
+  &__meter {
+    position: absolute;
+    height: 100%;
+    top: 0;
+
+    &--buy {
+      left: 0;
+      background: rgba($color-buy, $meter-transparency);
+
+      @media screen and (max-width: $mobile) {
+        left: unset;
+        right: 0;
+      }
+    }
+
+    &--sell {
+      right: 0;
+      background: rgba($color-sell, $meter-transparency);
     }
   }
 
   &__row {
+    position: relative;
     display: flex;
     font-family: $font-family-monospace;
 
@@ -40,12 +77,21 @@
       padding-left: $gap-5;
       padding-right: $gap-4;
       flex-direction: row;
+
+      @media screen and (max-width: $mobile) {
+        padding-left: $gap-4;
+      }
     }
 
     &--sell {
       padding-left: $gap-4;
       padding-right: $gap-5;
       flex-direction: row-reverse;
+
+      @media screen and (max-width: $mobile) {
+        padding-right: $gap-4;
+        flex-direction: row;
+      }
     }
   }
 
@@ -55,7 +101,11 @@
     }
 
     &--sell {
-      color: $color-sell;
+      color: $color-buy;
+
+      @media screen and (max-width: $mobile) {
+        color: $color-sell;
+      }
     }
   }
 }

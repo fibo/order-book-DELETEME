@@ -1,11 +1,15 @@
 import {
   FeedData,
+  FeedDataPoint,
   FeedAggregatedData,
+  FeedAggregatedDataRecord,
+  FeedAggregatedDataRow,
   FeedMessageInfoVersion,
   FeedMessageSnapshot,
   FeedMessageSubscribed,
   FeedMessageUpdate,
 } from '../types/feed';
+import { GroupSize } from '../types/market';
 import { Reducer, ReducerAction } from '../types/reducers';
 
 type ActionType =
@@ -41,6 +45,7 @@ export type DataFeedState = {
   aggregatedOrderBook: FeedAggregatedData;
   feed?: string;
   connected: boolean;
+  groupSize: GroupSize;
   orderBook: FeedData;
   readyState: ReadyState | null;
 };
@@ -52,12 +57,63 @@ export const dataFeedInitialState = (): State => ({
     asks: [],
     bids: [],
   },
+  groupSize: 0.5,
   orderBook: {
     asks: [],
     bids: [],
   },
   readyState: null,
 });
+
+/*
+ * Adapters
+ */
+
+function roundPrice(groupSize: GroupSize, value: number) {
+  switch (groupSize) {
+    case 1:
+      return Math.round(value);
+    default:
+      return value;
+  }
+}
+
+// reducer util
+function toAggregatedDataRecord(groupSize: GroupSize) {
+  return function (result: FeedAggregatedDataRecord, dataPoint: FeedDataPoint) {
+    const [price, size] = dataPoint;
+    const roundedPrice = roundPrice(groupSize, price);
+
+    if (typeof result[roundedPrice] === 'undefined') {
+      result[roundedPrice] = {
+        size,
+        total: groupSize,
+        percentage: 10,
+      };
+    } else {
+      result[roundedPrice] = {
+        size: result[roundedPrice].size + size,
+        total: result[roundedPrice].total + price,
+        percentage: 10,
+      };
+    }
+
+    return result;
+  };
+}
+
+function aggregatedDataRecordToAggregatedDataRows(record: FeedAggregatedDataRecord): FeedAggregatedDataRow[] {
+  return Object.entries(record).map(
+    ([price, { size, total, percentage }]) => [Number(price), size, total, percentage] as FeedAggregatedDataRow,
+  );
+}
+
+function aggregateFeedData(groupSize: GroupSize, { asks, bids }: FeedData): FeedAggregatedData {
+  return {
+    asks: aggregatedDataRecordToAggregatedDataRows(asks.reduce(toAggregatedDataRecord(groupSize), {})),
+    bids: aggregatedDataRecordToAggregatedDataRows(bids.reduce(toAggregatedDataRecord(groupSize), {})),
+  };
+}
 
 /*
  * Selectors
@@ -68,6 +124,8 @@ export const selectWebSocketIsOpen = (state: State) => state.readyState === WebS
 export const selectWebSocketReadyState = (state: State) => state.readyState;
 
 export const selectDataFeedIsConnected = (state: State) => state.connected;
+
+export const selectDataFeedGroupSize = (state: State) => state.groupSize;
 
 export const selectOrderBookAggregatedData = (state: State) => state.aggregatedOrderBook;
 
@@ -144,22 +202,34 @@ export function dataFeedReducer(state: State, action: Action): State {
           case isSnapshot && hasOrderBook: {
             const { asks, bids } = data as FeedData;
 
+            const groupSize = selectDataFeedGroupSize(state);
+            const orderBook = {
+              asks,
+              bids,
+            };
+
             return {
               ...state,
-              orderBook: {
-                asks,
-                bids,
-              },
-              aggregatedOrderBook: {
-                asks: asks.map((dataPoint) => [...dataPoint, 0]),
-                bids: bids.map((dataPoint) => [...dataPoint, 0]),
-              },
+              orderBook,
+              aggregatedOrderBook: aggregateFeedData(groupSize, orderBook),
             };
           }
 
           // Diff data message.
           case hasOrderBook && !isSnapshot: {
-            return state;
+            const groupSize = selectDataFeedGroupSize(state);
+            const previousOrderBook = selectOrderBookData(state);
+
+            const asks = previousOrderBook.asks.filter(() => true);
+            const bids = previousOrderBook.bids.filter(() => true);
+
+            const orderBook = { asks, bids };
+
+            return {
+              ...state,
+              orderBook,
+              aggregatedOrderBook: aggregateFeedData(groupSize, orderBook),
+            };
           }
 
           default: {
