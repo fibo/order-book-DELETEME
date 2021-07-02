@@ -1,27 +1,37 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { OrderBook } from './components/OrderBook';
 import { WEBSOCKET_URL } from './environment';
 import { useWebSocket } from './hooks/useWebSocket';
-import { selectWebSocketIsOpen, selectOrderBookData } from './reducers/webSocket';
+import { selectDataFeedIsConnected, selectWebSocketIsOpen, selectOrderBookAggregatedData } from './reducers/dataFeed';
 
 export function App() {
   const [state, sendMessage] = useWebSocket(WEBSOCKET_URL);
 
   const webSocketIsOpen = selectWebSocketIsOpen(state);
-  const orderBookData = selectOrderBookData(state);
+  const orderBookData = selectOrderBookAggregatedData(state);
+  const feedIsConnected = selectDataFeedIsConnected(state);
 
-  const onClick = useCallback(() => {
-    sendMessage({ event: 'subscribe', feed: 'book_ui_1', product_ids: ['PI_XBTUSD'] });
-  }, [sendMessage]);
+  const toggleFeed = useCallback(() => {
+    if (webSocketIsOpen) {
+      sendMessage({ event: 'subscribe', feed: 'book_ui_1', product_ids: ['PI_XBTUSD'] });
+    }
+  }, [sendMessage, webSocketIsOpen]);
+
+  useEffect(() => {
+    if (feedIsConnected) {
+      toggleFeed();
+    }
+  }, [feedIsConnected, toggleFeed]);
 
   return (
-    <div>
-      <OrderBook data={orderBookData} />
-
-      <button disabled={!webSocketIsOpen} onClick={onClick}>
-        Send
-      </button>
+    <div className='container'>
+      <OrderBook
+        data={orderBookData}
+        onClickToggleFeed={toggleFeed}
+        onClickKillFeed={toggleFeed}
+        webSocketIsOpen={webSocketIsOpen}
+      />
     </div>
   );
 }

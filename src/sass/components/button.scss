@@ -1,0 +1,17 @@
+.button {
+  cursor: pointer;
+  border: 0;
+  border-radius: $border-radius;
+  margin: $gap-2;
+  color: $color-text-white;
+  padding: $gap-3;
+  font-size: 0.8em;
+
+  &--toggle {
+    background-color: $color-purple;
+  }
+
+  &--kill {
+    background-color: $color-red;
+  }
+}

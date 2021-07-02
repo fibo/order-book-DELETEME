@@ -1,4 +1,11 @@
-import { FeedData, FeedMessageSnapshot, FeedMessageSubscribed, FeedMessageUpdate } from '../types/feed';
+import {
+  FeedData,
+  FeedAggregatedData,
+  FeedMessageInfoVersion,
+  FeedMessageSnapshot,
+  FeedMessageSubscribed,
+  FeedMessageUpdate,
+} from '../types/feed';
 import { Reducer, ReducerAction } from '../types/reducers';
 
 type ActionType =
@@ -16,24 +23,35 @@ const OPEN = WebSocket.OPEN;
 
 type ReadyState = typeof CONNECTING | typeof CLOSED | typeof CLOSING | typeof OPEN;
 
-export type WebSocketAction = ReducerAction<ActionType>;
+export type DataFeedAction = ReducerAction<ActionType>;
+type Action = DataFeedAction;
 
-export type WebSocketReducer = Reducer<WebSocketState, WebSocketAction>;
+export type DataFeedReducer = Reducer<State, Action>;
 
-export type WebSocketMessageReceived = Partial<FeedMessageSnapshot> &
+export type WebSocketMessageReceived = Partial<FeedMessageInfoVersion> &
+  Partial<FeedMessageSnapshot> &
   Partial<FeedMessageSubscribed> &
   Partial<FeedMessageUpdate>;
+
 /*
  * State
  */
 
-export type WebSocketState = {
+export type DataFeedState = {
+  aggregatedOrderBook: FeedAggregatedData;
   feed?: string;
+  connected: boolean;
   orderBook: FeedData;
   readyState: ReadyState | null;
 };
+type State = DataFeedState;
 
-export const webSocketInitialState = (): WebSocketState => ({
+export const dataFeedInitialState = (): State => ({
+  connected: false,
+  aggregatedOrderBook: {
+    asks: [],
+    bids: [],
+  },
   orderBook: {
     asks: [],
     bids: [],
@@ -45,17 +63,21 @@ export const webSocketInitialState = (): WebSocketState => ({
  * Selectors
  */
 
-export const selectWebSocketIsOpen = (state: WebSocketState) => state.readyState === WebSocket.OPEN;
+export const selectWebSocketIsOpen = (state: State) => state.readyState === WebSocket.OPEN;
 
-export const selectWebSocketReadyState = (state: WebSocketState) => state.readyState;
+export const selectWebSocketReadyState = (state: State) => state.readyState;
 
-export const selectOrderBookData = (state: WebSocketState) => state.orderBook;
+export const selectDataFeedIsConnected = (state: State) => state.connected;
+
+export const selectOrderBookAggregatedData = (state: State) => state.aggregatedOrderBook;
+
+export const selectOrderBookData = (state: State) => state.orderBook;
 
 /*
  * Reducer
  */
 
-export function webSocketReducer(state: WebSocketState, action: ReducerAction<ActionType>): WebSocketState {
+export function dataFeedReducer(state: State, action: Action): State {
   switch (action.type) {
     case 'WEBSOCKET_CLOSED': {
       return {
@@ -93,6 +115,7 @@ export function webSocketReducer(state: WebSocketState, action: ReducerAction<Ac
       try {
         const data = typeof action.data === 'string' ? (JSON.parse(action.data) as WebSocketMessageReceived) : {};
 
+        const isInfoVersion = data.event === 'info';
         const hasSubscribedEvent = data.event === 'subscribed';
         const hasFeedName = typeof data.feed === 'string' && data.feed.length > 0;
         const hasAsks = Array.isArray(data.asks);
@@ -101,25 +124,35 @@ export function webSocketReducer(state: WebSocketState, action: ReducerAction<Ac
         const isSnapshot = hasFeedName && (data.feed as string).endsWith('_snapshot');
 
         switch (true) {
-          // Subsribed event.
-          case hasSubscribedEvent && hasFeedName: {
-            const { feed } = data as FeedMessageSubscribed;
-
+          // First message.
+          case isInfoVersion: {
             return {
               ...state,
-              feed,
+              connected: true,
+            };
+          }
+
+          // Subsribed event.
+          case hasSubscribedEvent && hasFeedName: {
+            return {
+              ...state,
+              feed: data.feed,
             };
           }
 
           // Initial snapshot.
           case isSnapshot && hasOrderBook: {
-            const { asks, bids } = data as FeedMessageSubscribed;
+            const { asks, bids } = data as FeedData;
 
             return {
               ...state,
               orderBook: {
                 asks,
                 bids,
+              },
+              aggregatedOrderBook: {
+                asks: asks.map((dataPoint) => [...dataPoint, 0]),
+                bids: bids.map((dataPoint) => [...dataPoint, 0]),
               },
             };
           }
