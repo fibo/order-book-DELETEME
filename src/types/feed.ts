@@ -1,14 +1,24 @@
 export type ProductId = 'PI_XBTUSD' | 'PI_ETHUSD';
 
-export type FeedDataPoint = [price: number, amount: number];
+export type Price = number;
+export type Size = number;
+export type Total = number;
+export type Percentage = number;
+
+export type FeedOrder = [price: Price, size: Size];
+export type OrderRecord = Record<Price, Size>;
 
 export type FeedData = {
-  asks: FeedDataPoint[];
-  bids: FeedDataPoint[];
+  asks: FeedOrder[];
+  bids: FeedOrder[];
 };
 
-export type FeedAggregatedDataRecord = Record</* price: */ number, { size: number; total: number; percentage: number }>;
-export type FeedAggregatedDataRow = [price: number, size: number, total: number, percentage: number];
+export type OrderBook = {
+  asks: OrderRecord;
+  bids: OrderRecord;
+};
+
+export type FeedAggregatedDataRow = [price: Price, size: Size, total: Total, percentage: Percentage];
 
 export type FeedAggregatedData = {
   asks: FeedAggregatedDataRow[];

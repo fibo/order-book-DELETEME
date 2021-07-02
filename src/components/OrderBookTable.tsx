@@ -25,7 +25,7 @@ export function OrderBookTable({ rows, side }: OrderBookTableProps) {
         ))}
       </div>
 
-      <div>
+      <div className='order-book-table__body'>
         {rows.map(([price, size, total, percentage], i) => (
           <div
             className={classnames('order-book-table__row', {

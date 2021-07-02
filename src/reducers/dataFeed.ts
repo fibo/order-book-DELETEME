@@ -1,13 +1,18 @@
 import {
   FeedData,
-  FeedDataPoint,
+  FeedOrder,
   FeedAggregatedData,
-  FeedAggregatedDataRecord,
   FeedAggregatedDataRow,
   FeedMessageInfoVersion,
   FeedMessageSnapshot,
   FeedMessageSubscribed,
   FeedMessageUpdate,
+  OrderBook,
+  OrderRecord,
+  Price,
+  Size,
+  Total,
+  Percentage,
 } from '../types/feed';
 import { GroupSize } from '../types/market';
 import { Reducer, ReducerAction } from '../types/reducers';
@@ -46,7 +51,7 @@ export type DataFeedState = {
   feed?: string;
   connected: boolean;
   groupSize: GroupSize;
-  orderBook: FeedData;
+  orderBook: OrderBook;
   readyState: ReadyState | null;
 };
 type State = DataFeedState;
@@ -59,8 +64,8 @@ export const dataFeedInitialState = (): State => ({
   },
   groupSize: 0.5,
   orderBook: {
-    asks: [],
-    bids: [],
+    asks: {},
+    bids: {},
   },
   readyState: null,
 });
@@ -69,49 +74,64 @@ export const dataFeedInitialState = (): State => ({
  * Adapters
  */
 
-function roundPrice(groupSize: GroupSize, value: number) {
+export function feedDataToOrderBook({ asks, bids }: FeedData) {
+  return {
+    asks: feedOrdersToOrderRecord(asks),
+    bids: feedOrdersToOrderRecord(bids),
+  };
+}
+
+export function roundPrice(groupSize: GroupSize, value: number) {
   switch (groupSize) {
-    case 1:
-      return Math.round(value);
+    case 0.5: {
+      const base = Math.floor(value);
+      const rest = value - base;
+      return rest >= groupSize ? base + groupSize : base;
+    }
+
+    case 1: {
+      return Math.floor(value);
+    }
+
     default:
       return value;
   }
 }
 
+// filter util
+const ordersToBeRemoved = ([, size]: FeedOrder) => size === 0;
+
 // reducer util
-function toAggregatedDataRecord(groupSize: GroupSize) {
-  return function (result: FeedAggregatedDataRecord, dataPoint: FeedDataPoint) {
-    const [price, size] = dataPoint;
-    const roundedPrice = roundPrice(groupSize, price);
+export function feedOrdersToOrderRecord(orders: FeedOrder[]): OrderRecord {
+  return orders.reduce((orderRecord, [price, size]) => ({ ...orderRecord, [price]: size }), {});
+}
 
-    if (typeof result[roundedPrice] === 'undefined') {
-      result[roundedPrice] = {
-        size,
-        total: groupSize,
-        percentage: 10,
-      };
+function aggregatedOrderBook(groupSize: GroupSize, record: OrderRecord): FeedAggregatedDataRow[] {
+  const aggregate: Record<Price, { size: Size; total: Total; percentage: Percentage }> = {};
+
+  for (const [price, size] of Object.entries(record)) {
+    const roundedPrice = roundPrice(groupSize, Number(price));
+
+    if (typeof aggregate[roundedPrice] === 'undefined') {
+      aggregate[roundedPrice] = { size, total: 0, percentage: 0 };
     } else {
-      result[roundedPrice] = {
-        size: result[roundedPrice].size + size,
-        total: result[roundedPrice].total + price,
-        percentage: 10,
-      };
+      aggregate[roundedPrice] = { size: aggregate[roundedPrice].size + size, total: 0, percentage: 0 };
     }
+  }
 
-    return result;
-  };
+  return Object.entries(aggregate)
+    .sort(([priceA], [priceB]) => {
+      if (priceA < priceB) return 1;
+      if (priceA > priceB) return -1;
+      return 0;
+    })
+    .map(([price, { size, total, percentage }]) => [Number(price), size, total, percentage]);
 }
 
-function aggregatedDataRecordToAggregatedDataRows(record: FeedAggregatedDataRecord): FeedAggregatedDataRow[] {
-  return Object.entries(record).map(
-    ([price, { size, total, percentage }]) => [Number(price), size, total, percentage] as FeedAggregatedDataRow,
-  );
-}
-
-function aggregateFeedData(groupSize: GroupSize, { asks, bids }: FeedData): FeedAggregatedData {
+function aggregateFeedData(groupSize: GroupSize, { asks, bids }: OrderBook): FeedAggregatedData {
   return {
-    asks: aggregatedDataRecordToAggregatedDataRows(asks.reduce(toAggregatedDataRecord(groupSize), {})),
-    bids: aggregatedDataRecordToAggregatedDataRows(bids.reduce(toAggregatedDataRecord(groupSize), {})),
+    asks: aggregatedOrderBook(groupSize, asks),
+    bids: aggregatedOrderBook(groupSize, bids),
   };
 }
 
@@ -200,13 +220,8 @@ export function dataFeedReducer(state: State, action: Action): State {
 
           // Initial snapshot.
           case isSnapshot && hasOrderBook: {
-            const { asks, bids } = data as FeedData;
-
             const groupSize = selectDataFeedGroupSize(state);
-            const orderBook = {
-              asks,
-              bids,
-            };
+            const orderBook = feedDataToOrderBook(data as FeedData);
 
             return {
               ...state,
@@ -217,13 +232,36 @@ export function dataFeedReducer(state: State, action: Action): State {
 
           // Diff data message.
           case hasOrderBook && !isSnapshot: {
+            const { asks, bids } = data as FeedData;
+
             const groupSize = selectDataFeedGroupSize(state);
-            const previousOrderBook = selectOrderBookData(state);
+            const { asks: previousAsks, bids: previousBids } = selectOrderBookData(state);
 
-            const asks = previousOrderBook.asks.filter(() => true);
-            const bids = previousOrderBook.bids.filter(() => true);
+            const asksToBeRemoved = feedOrdersToOrderRecord(asks.filter(ordersToBeRemoved));
+            console.log(asksToBeRemoved);
+            const bidsToBeRemoved = feedOrdersToOrderRecord(bids.filter(ordersToBeRemoved));
 
-            const orderBook = { asks, bids };
+            const asksToKeep = [] as FeedOrder[];
+            const bidsToKeep = [] as FeedOrder[];
+
+            Object.entries(previousAsks).forEach(([price, size]) => {
+              if (typeof asksToBeRemoved[Number(price)] !== 'undefined') {
+                asksToKeep.push([Number(price), size]);
+              }
+            });
+
+            Object.entries(previousBids).forEach(([price, size]) => {
+              if (typeof bidsToBeRemoved[Number(price)] !== 'undefined') {
+                bidsToKeep.push([Number(price), size]);
+              }
+            });
+
+            const orderBook = feedDataToOrderBook({
+              // asks with updated size will overwrite asksToKeep
+              // same for bids
+              asks: asksToKeep.concat(asks),
+              bids: bidsToKeep.concat(bids),
+            });
 
             return {
               ...state,
