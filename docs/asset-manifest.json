@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/order-book/static/css/main.9be3cdfd.chunk.css",
-    "main.js": "/order-book/static/js/main.2b28ba8c.chunk.js",
-    "main.js.map": "/order-book/static/js/main.2b28ba8c.chunk.js.map",
+    "main.js": "/order-book/static/js/main.87eb4c44.chunk.js",
+    "main.js.map": "/order-book/static/js/main.87eb4c44.chunk.js.map",
     "runtime-main.js": "/order-book/static/js/runtime-main.a61c65b4.js",
     "runtime-main.js.map": "/order-book/static/js/runtime-main.a61c65b4.js.map",
     "static/js/2.80549f46.chunk.js": "/order-book/static/js/2.80549f46.chunk.js",
@@ -15,6 +15,6 @@
     "static/js/runtime-main.a61c65b4.js",
     "static/js/2.80549f46.chunk.js",
     "static/css/main.9be3cdfd.chunk.css",
-    "static/js/main.2b28ba8c.chunk.js"
+    "static/js/main.87eb4c44.chunk.js"
   ]
 }

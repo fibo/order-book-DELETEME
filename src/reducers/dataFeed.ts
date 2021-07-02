@@ -238,7 +238,6 @@ export function dataFeedReducer(state: State, action: Action): State {
             const { asks: previousAsks, bids: previousBids } = selectOrderBookData(state);
 
             const asksToBeRemoved = feedOrdersToOrderRecord(asks.filter(ordersToBeRemoved));
-            console.log(asksToBeRemoved);
             const bidsToBeRemoved = feedOrdersToOrderRecord(bids.filter(ordersToBeRemoved));
 
             const asksToKeep = [] as FeedOrder[];
