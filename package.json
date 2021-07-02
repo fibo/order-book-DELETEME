@@ -6,6 +6,7 @@
     "name": "Gianluca Casati",
     "url": "http://g14n.info"
   },
+  "homepage":"http://g14n.info/order-book",
   "license": "UNLICENSED",
   "dependencies": {
     "@testing-library/jest-dom": "^5.11.4",
