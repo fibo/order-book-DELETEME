@@ -11,8 +11,9 @@ import {
 } from '../reducers/dataFeed';
 import { FeedMessageSubscribe } from '../types/feed';
 
+export type KillMessage = 'kill!';
 export type WebSocketDispatch = Dispatch<DataFeedAction>;
-export type WebSocketMessageSent = FeedMessageSubscribe;
+export type WebSocketMessageSent = FeedMessageSubscribe | KillMessage;
 export type WebSocketSendMessage = (message: WebSocketMessageSent) => void;
 
 function initializeWebSocket(webSocketUrl: string, dispatch: WebSocketDispatch) {
@@ -48,7 +49,7 @@ export function useWebSocket(webSocketUrl: string): [DataFeedState, WebSocketSen
   const webSocketIsOpen = selectWebSocketIsOpen(state);
 
   const sendMessage = useCallback(
-    (message: FeedMessageSubscribe) => {
+    (message: WebSocketMessageSent) => {
       if (webSocketIsOpen) {
         const webSocket = webSocketRef.current;
 

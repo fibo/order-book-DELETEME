@@ -13,8 +13,9 @@ import {
   Size,
   Total,
   Percentage,
+  ProductId,
 } from '../types/feed';
-import { GroupSize } from '../types/market';
+import { GroupSize, GroupSizeList } from '../types/market';
 import { Reducer, ReducerAction } from '../types/reducers';
 
 type ActionType =
@@ -51,7 +52,9 @@ export type DataFeedState = {
   feed?: string;
   connected: boolean;
   groupSize: GroupSize;
+  groupSizeList: GroupSizeList;
   orderBook: OrderBook;
+  productId: ProductId;
   readyState: ReadyState | null;
 };
 type State = DataFeedState;
@@ -62,11 +65,13 @@ export const dataFeedInitialState = (): State => ({
     asks: [],
     bids: [],
   },
-  groupSize: 0.5,
+  groupSize: 1,
+  groupSizeList: [0.5, 1, 2.5],
   orderBook: {
     asks: {},
     bids: {},
   },
+  productId: 'PI_ETHUSD',
   readyState: null,
 });
 
@@ -107,25 +112,34 @@ export function feedOrdersToOrderRecord(orders: FeedOrder[]): OrderRecord {
 }
 
 function aggregatedOrderBook(groupSize: GroupSize, record: OrderRecord): FeedAggregatedDataRow[] {
-  const aggregate: Record<Price, { size: Size; total: Total; percentage: Percentage }> = {};
+  const aggregated: Record<Price, { size: Size; total: Total; percentage: Percentage }> = {};
 
-  for (const [price, size] of Object.entries(record)) {
+  const sum = Object.keys(record).reduce((sum, price) => sum + Number(price), 0);
+  let cumulativeSum = 0;
+
+  const sortedRecord = Object.entries(record).sort(([priceA], [priceB]) => {
+    if (priceA < priceB) return 1;
+    if (priceA > priceB) return -1;
+    return 0;
+  });
+
+  for (const [price, size] of sortedRecord) {
+    cumulativeSum += size;
     const roundedPrice = roundPrice(groupSize, Number(price));
 
-    if (typeof aggregate[roundedPrice] === 'undefined') {
-      aggregate[roundedPrice] = { size, total: 0, percentage: 0 };
-    } else {
-      aggregate[roundedPrice] = { size: aggregate[roundedPrice].size + size, total: 0, percentage: 0 };
-    }
+    const roundedPriceSize =
+      typeof aggregated[roundedPrice] === 'undefined' ? size : aggregated[roundedPrice].size + size;
+    const percentage = Math.round((cumulativeSum * 100) / sum);
+
+    aggregated[roundedPrice] = { size: roundedPriceSize, total: cumulativeSum, percentage };
   }
 
-  return Object.entries(aggregate)
-    .sort(([priceA], [priceB]) => {
-      if (priceA < priceB) return 1;
-      if (priceA > priceB) return -1;
-      return 0;
-    })
-    .map(([price, { size, total, percentage }]) => [Number(price), size, total, percentage]);
+  return Object.entries(aggregated).map(([price, { size, total, percentage }]) => [
+    Number(price),
+    size,
+    total,
+    percentage,
+  ]);
 }
 
 function aggregateFeedData(groupSize: GroupSize, { asks, bids }: OrderBook): FeedAggregatedData {
@@ -147,9 +161,13 @@ export const selectDataFeedIsConnected = (state: State) => state.connected;
 
 export const selectDataFeedGroupSize = (state: State) => state.groupSize;
 
+export const selectDataFeedGroupSizeList = (state: State) => state.groupSizeList;
+
 export const selectOrderBookAggregatedData = (state: State) => state.aggregatedOrderBook;
 
 export const selectOrderBookData = (state: State) => state.orderBook;
+
+export const selectProductId = (state: State) => state.productId;
 
 /*
  * Reducer

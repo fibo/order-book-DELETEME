@@ -17,7 +17,7 @@ test('WEBSOCKET_RECEIVE_MESSAGE info event', () => {
 
 test('WEBSOCKET_RECEIVE_MESSAGE diff', () => {
   const state = dataFeedReducer(
-    { ...dataFeedInitialState(), orderBook: { asks: [[1000, 1]], bids: [[2000, 2]] } },
+    { ...dataFeedInitialState(), orderBook: { asks: { 1000: 1 }, bids: { 2000: 2 } } },
     {
       type: 'WEBSOCKET_RECEIVE_MESSAGE',
       data: '{ "asks":[ [1000, 0] ], "bids":[ [2000, 0] ] }',
@@ -25,8 +25,8 @@ test('WEBSOCKET_RECEIVE_MESSAGE diff', () => {
   );
 
   const orderBook = selectOrderBookData(state);
-  expect(orderBook.asks.length).toBe(0);
-  expect(orderBook.bids.length).toBe(0);
+  expect(Object.keys(orderBook.asks).length).toBe(0);
+  expect(Object.keys(orderBook.bids).length).toBe(0);
 });
 
 test('roundPrice', () => {

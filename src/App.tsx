@@ -6,21 +6,33 @@ import { useWebSocket } from './hooks/useWebSocket';
 import {
   selectDataFeedIsConnected,
   selectDataFeedGroupSize,
+  selectDataFeedGroupSizeList,
   selectWebSocketIsOpen,
   selectOrderBookAggregatedData,
+  selectProductId,
 } from './reducers/dataFeed';
 
 export function App() {
   const [state, sendMessage] = useWebSocket(WEBSOCKET_URL);
 
   const groupSize = selectDataFeedGroupSize(state);
+  const groupSizeList = selectDataFeedGroupSizeList(state);
   const webSocketIsOpen = selectWebSocketIsOpen(state);
   const orderBookData = selectOrderBookAggregatedData(state);
   const feedIsConnected = selectDataFeedIsConnected(state);
+  const productId = selectProductId(state);
 
   const toggleFeed = useCallback(() => {
     if (webSocketIsOpen) {
-      sendMessage({ event: 'subscribe', feed: 'book_ui_1', product_ids: ['PI_XBTUSD'] });
+      const wantedProductId = productId === 'PI_XBTUSD' ? 'PI_ETHUSD' : 'PI_XBTUSD';
+
+      sendMessage({ event: 'subscribe', feed: 'book_ui_1', product_ids: [wantedProductId] });
+    }
+  }, [sendMessage, productId, webSocketIsOpen]);
+
+  const killFeed = useCallback(() => {
+    if (webSocketIsOpen) {
+      sendMessage('kill!');
     }
   }, [sendMessage, webSocketIsOpen]);
 
@@ -35,8 +47,9 @@ export function App() {
       <OrderBook
         data={orderBookData}
         groupSize={groupSize}
+        groupSizeList={groupSizeList}
         onClickToggleFeed={toggleFeed}
-        onClickKillFeed={toggleFeed}
+        onClickKillFeed={killFeed}
         webSocketIsOpen={webSocketIsOpen}
       />
     </div>

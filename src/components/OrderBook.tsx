@@ -2,7 +2,7 @@ import { OrderBookSelect, OrderBookSelectProps } from '../components/OrderBookSe
 import { OrderBookTable } from '../components/OrderBookTable';
 import { FeedAggregatedData } from '../types/feed';
 
-export type OrderBookProps = Pick<OrderBookSelectProps, 'groupSize'> & {
+export type OrderBookProps = Pick<OrderBookSelectProps, 'groupSize' | 'groupSizeList'> & {
   data: FeedAggregatedData;
   onClickToggleFeed?: () => void;
   onClickKillFeed?: () => void;
@@ -12,6 +12,7 @@ export type OrderBookProps = Pick<OrderBookSelectProps, 'groupSize'> & {
 export function OrderBook({
   data: { asks, bids },
   groupSize,
+  groupSizeList,
   onClickToggleFeed,
   onClickKillFeed,
   webSocketIsOpen,
@@ -21,7 +22,7 @@ export function OrderBook({
       <div className='order-book__header'>
         <div>Order Book</div>
 
-        <OrderBookSelect groupSize={groupSize} />
+        <OrderBookSelect groupSize={groupSize} groupSizeList={groupSizeList} />
       </div>
 
       <div className='order-book__content'>

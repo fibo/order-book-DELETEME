@@ -1,3 +1,12 @@
 .order-book-select {
   margin-right: $gap-4;
+  height: 10px;
+  width: fit-content;
+
+  &__label {
+    padding-left: $gap-3;
+    padding-right: $gap-3;
+    border-radius: $border-radius;
+    background-color: $color-background-dark-3;
+  }
 }
